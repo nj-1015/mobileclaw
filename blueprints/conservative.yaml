@@ -1,0 +1,65 @@
+apiVersion: mobileclaw/v1
+kind: AgentBlueprint
+metadata:
+  name: conservative-agent
+  version: "1.0.0"
+  description: "Strict lockdown agent — minimal permissions, AI APIs only"
+
+sandbox:
+  runtime: termux-proot
+  workspace:
+    path: ~/agents/conservative-agent/workspace
+    size_limit_mb: 1024
+  mounts: []
+  env: {}
+
+protection:
+  filesystem:
+    allow_read:
+      - /workspace/**
+      - /tmp/**
+    allow_write:
+      - /workspace/**
+      - /tmp/**
+    deny:
+      - "**/*.key"
+      - "**/*.pem"
+      - "**/.ssh/**"
+      - "**/.gnupg/**"
+      - "**/.env"
+
+  process:
+    mode: allowlist
+    unknown_action: deny
+    allow:
+      - binary: cat
+      - binary: head
+      - binary: tail
+      - binary: grep
+      - binary: ls
+      - binary: pwd
+      - binary: echo
+      - binary: node
+      - binary: python3
+      - binary: git
+      - binary: mkdir
+      - binary: touch
+      - binary: diff
+      - binary: wc
+      - binary: date
+    max_processes: 3
+    max_memory_mb: 256
+    max_cpu_percent: 50
+
+  network:
+    mode: allowlist
+    allow:
+      - host: api.anthropic.com
+        rate: 30/hour
+    unknown_host_action: block
+    log_all_requests: true
+
+skills: []
+
+channels:
+  - type: terminal

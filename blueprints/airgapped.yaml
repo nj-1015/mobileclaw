@@ -1,0 +1,77 @@
+apiVersion: mobileclaw/v1
+kind: AgentBlueprint
+metadata:
+  name: airgapped-agent
+  version: "1.0.0"
+  description: "Fully offline agent — local inference only, no network access"
+
+sandbox:
+  runtime: termux-proot
+  workspace:
+    path: ~/agents/airgapped-agent/workspace
+    size_limit_mb: 2048
+  mounts: []
+  env: {}
+
+protection:
+  filesystem:
+    allow_read:
+      - /workspace/**
+      - /tmp/**
+    allow_write:
+      - /workspace/**
+      - /tmp/**
+    deny:
+      - "**/*.key"
+      - "**/*.pem"
+      - "**/.ssh/**"
+      - "**/.gnupg/**"
+      - "**/.env"
+
+  process:
+    mode: allowlist
+    unknown_action: deny
+    allow:
+      - binary: cat
+      - binary: head
+      - binary: tail
+      - binary: grep
+      - binary: ls
+      - binary: pwd
+      - binary: echo
+      - binary: node
+      - binary: python3
+      - binary: mkdir
+      - binary: touch
+      - binary: sed
+      - binary: awk
+    max_processes: 5
+    max_memory_mb: 1024
+    max_cpu_percent: 90
+
+  network:
+    mode: allowlist
+    allow: []
+    unknown_host_action: block
+    log_all_requests: true
+
+  inference:
+    gateway_port: 8080
+    primary:
+      engine: llama_cpp
+      model: gemma-2b-it-q4_k_m
+      model_path: ~/models/
+      context_length: 2048
+    routing:
+      simple_tasks: local
+      complex_tasks: local
+      sensitive_content: local
+    cost_tracking:
+      enabled: false
+      max_cloud_cost_per_day_usd: 0
+
+skills:
+  - battery-aware
+
+channels:
+  - type: terminal

@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Agent data (user-specific)
+agents/
+
+# Logs
+*.log
+*.jsonl
+
+# Environment and secrets
+.env
+*.keys.json
+
+# Database
+store/
+data/
+
+# Groups (user-specific)
+groups/*
+!groups/main/
+!groups/global/
+groups/main/*
+groups/global/*
+!groups/main/CLAUDE.md
+!groups/global/CLAUDE.md
+
+# Temp files
+.tmp-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Local state
+.mobileclaw/

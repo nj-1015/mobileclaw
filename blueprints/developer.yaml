@@ -1,0 +1,116 @@
+apiVersion: mobileclaw/v1
+kind: AgentBlueprint
+metadata:
+  name: developer-agent
+  version: "1.0.0"
+  description: "Developer assistant — GitHub, npm, docs access with operator approval for unknowns"
+
+sandbox:
+  runtime: termux-proot
+  workspace:
+    path: ~/agents/developer-agent/workspace
+    size_limit_mb: 4096
+  mounts: []
+  env:
+    EDITOR: vim
+    LANG: en_US.UTF-8
+
+protection:
+  filesystem:
+    allow_read:
+      - /workspace/**
+      - /tools/**
+      - /tmp/**
+    allow_write:
+      - /workspace/**
+      - /tmp/**
+    deny:
+      - "**/*.key"
+      - "**/*.pem"
+      - "**/.ssh/**"
+      - "**/.gnupg/**"
+
+  process:
+    mode: allowlist
+    unknown_action: ask_operator
+    allow:
+      - binary: git
+      - binary: npm
+      - binary: npx
+      - binary: node
+      - binary: python3
+      - binary: pip3
+      - binary: cat
+      - binary: head
+      - binary: tail
+      - binary: grep
+      - binary: find
+        args_deny: ["-delete", "-exec rm"]
+      - binary: ls
+      - binary: pwd
+      - binary: mkdir
+      - binary: cp
+      - binary: mv
+      - binary: rm
+        args_deny: ["-rf /", "-rf ~", "-rf .."]
+      - binary: touch
+      - binary: echo
+      - binary: sed
+      - binary: awk
+      - binary: sort
+      - binary: diff
+      - binary: wc
+      - binary: tar
+      - binary: gzip
+      - binary: unzip
+      - binary: date
+      - binary: env
+      - binary: which
+      - binary: curl
+        condition: network_proxy_active
+      - binary: wget
+        condition: network_proxy_active
+    max_processes: 10
+    max_memory_mb: 512
+    max_cpu_percent: 80
+
+  network:
+    mode: allowlist
+    allow:
+      - host: api.anthropic.com
+        rate: 60/hour
+      - host: api.github.com
+        rate: 120/hour
+      - host: github.com
+        rate: 120/hour
+      - host: registry.npmjs.org
+        rate: 300/hour
+      - host: pypi.org
+        rate: 100/hour
+      - host: stackoverflow.com
+      - host: developer.mozilla.org
+      - host: docs.python.org
+    unknown_host_action: ask_operator
+    log_all_requests: true
+
+  # inference:                          # Optional — uncomment to enable cost tracking
+  #   gateway_port: 0                   # 0 = random available port
+  #   cost_tracking:
+  #     enabled: true
+  #     max_cloud_cost_per_day_usd: 10
+
+  tools:
+    require_approval:
+      - tool: mcp__gmail__send_email
+        reason: Sending email on your behalf
+      - tool: mcp__gmail__create_draft
+        reason: Creating email draft
+    block:
+      - tool: mcp__gmail__delete_email
+
+skills:
+  - termux-notifications
+  - battery-aware
+
+channels:
+  - type: terminal
